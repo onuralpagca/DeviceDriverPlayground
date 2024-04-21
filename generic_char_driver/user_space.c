@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/sysmacros.h>
@@ -24,6 +25,9 @@ void exit_sys(const char *msg);
 int main(void)
 {
 	int fd;
+	char buf[1024];
+	ssize_t result;
+
 	const char *node_file = "device_node_file";
 	mode_t mode = S_IFCHR | 0777;
 
@@ -36,6 +40,32 @@ int main(void)
 
 	if((fd = open(node_file, O_RDWR)) == -1)
 		exit_sys("open");
+
+	if ((result = read(fd, buf, 3)) == -1)
+        exit_sys("read");
+    buf[result] = '\0';
+
+    printf("%jd bytes read: \"%s\"\n", (intmax_t)result, buf);
+
+    if ((result = read(fd, buf, 5)) == -1)
+        exit_sys("read");
+    buf[result] = '\0';
+
+    printf("%jd bytes read: \"%s\"\n", (intmax_t)result, buf);
+
+    if ((result = read(fd, buf, 30)) == -1)
+        exit_sys("read");
+    buf[result] = '\0';
+
+    printf("%jd bytes read: \"%s\"\n", (intmax_t)result, buf);
+
+    if ((result = read(fd, buf, 30)) == -1)
+        exit_sys("read");
+    buf[result] = '\0';
+
+    printf("%jd bytes read: \"%s\"\n", (intmax_t)result, buf);
+	
+	write(fd, buf, 100);
 
 	close(fd);
 

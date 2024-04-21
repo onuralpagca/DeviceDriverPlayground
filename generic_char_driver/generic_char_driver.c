@@ -26,14 +26,20 @@ MODULE_DESCRIPTION("General Character Device Driver");
 
 static int generic_open(struct inode *inodep, struct file *filp);
 static int generic_release(struct inode *inodep, struct file *filp);
+static ssize_t generic_read(struct file *filp, char *buf, size_t size, loff_t *off);
+static ssize_t generic_write(struct file *filp, const char *buf, size_t size, loff_t *off);
 
 static struct cdev g_cdev;
 
 static struct file_operations g_fops = {
 	.owner = THIS_MODULE, 
 	.open = generic_open, 
-	.release = generic_release
+	.release = generic_release,
+	.read = generic_read,
+	.write = generic_write
 };
+
+static char g_buf[] = "01234567890ABCDEFGH";
 
 static int __init generic_init(void)
 {
@@ -78,6 +84,29 @@ static int generic_release(struct inode *inodep, struct file *filp)
 	printk(KERN_INFO "generic-char-driver-closed...\n");
 
 	return 0;
+}
+
+static ssize_t generic_read(struct file *filp, char *buf, size_t size, loff_t *off)
+{
+	size_t esize;
+	size_t slen;
+
+	slen = strlen(g_buf);
+	esize = *off + size > slen ? slen - *off : size;
+
+	if (copy_to_user(buf, g_buf + *off, esize) != 0)
+		return -EFAULT;
+
+	*off += esize;
+
+	return esize;
+}
+
+static ssize_t generic_write(struct file *filp, const char *buf, size_t size, loff_t *off)
+{
+	printk(KERN_INFO "generic_write function called...\n");
+
+	return size;
 }
 
 module_init(generic_init);
